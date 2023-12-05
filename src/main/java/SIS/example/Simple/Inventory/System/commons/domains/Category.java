@@ -3,18 +3,20 @@ package SIS.example.Simple.Inventory.System.commons.domains;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
-@Table(name = "worker")
 @Data
-public class Worker {
+@Table(name = "category")
+public class Category {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @Column(name = "name")
     private String name;
 
-    @ManyToOne
-    private Role role;
+    @OneToMany(mappedBy = "category")
+    private List<Product> products;
 }

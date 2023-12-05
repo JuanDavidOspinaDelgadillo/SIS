@@ -3,10 +3,12 @@ package SIS.example.Simple.Inventory.System.commons.domains;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "worker")
 @Data
-public class Worker {
+@Table(name = "product")
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -15,6 +17,9 @@ public class Worker {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "register_date")
+    private LocalDate registerDate;
+
     @ManyToOne
-    private Role role;
+    private Category category;
 }
