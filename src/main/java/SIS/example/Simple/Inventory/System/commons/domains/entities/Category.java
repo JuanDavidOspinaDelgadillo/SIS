@@ -31,6 +31,6 @@ public class Category {
 
     @JsonIgnore
     @JsonManagedReference
-    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "category", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     private List<Product> products;
 }

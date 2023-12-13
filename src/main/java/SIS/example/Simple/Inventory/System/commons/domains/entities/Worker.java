@@ -35,6 +35,6 @@ public class Worker {
 
     @JsonIgnore
     @JsonManagedReference
-    @OneToMany(mappedBy = "worker", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "worker", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     private List<Product> products;
 }

@@ -33,6 +33,6 @@ public class Role {
 
     @JsonIgnore
     @JsonManagedReference
-    @OneToMany(mappedBy = "role", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "role", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     private List<Worker> workers;
 }
