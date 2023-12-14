@@ -15,4 +15,6 @@ public class WorkerDTO implements Serializable {
     private Long id;
     private String name;
     private Integer age;
+    private String email;
+    private String password;
 }

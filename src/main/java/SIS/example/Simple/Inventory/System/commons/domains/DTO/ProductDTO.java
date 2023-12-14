@@ -18,4 +18,6 @@ public class ProductDTO implements Serializable {
     private Long id;
     private String product;
     private LocalDate registerDate;
+    private Long categoryId;
+    private Long workerId;
 }

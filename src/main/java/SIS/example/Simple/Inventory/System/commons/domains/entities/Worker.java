@@ -28,6 +28,12 @@ public class Worker {
     @Column(name = "age")
     private Integer age;
 
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "password")
+    private String password;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id")
