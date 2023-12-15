@@ -26,12 +26,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-data-rest'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	implementation 'org.modelmapper:modelmapper:2.4.2'
+
+
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	implementation 'org.postgresql:postgresql'
 
