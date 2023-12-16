@@ -23,16 +23,10 @@ public interface ProductRepo extends JpaRepository<Product, Long> {
  @Query(value = "SELECT * FROM product", nativeQuery = true)
  List<Product> getAll();
 
- @Query(value = "SELECT * FROM product p WHERE p.worker_id = :workerId", nativeQuery = true)
- List<Product> getAllByWorker(@Param("workerId") Long workerId);
-
- @Query(value = "SELECT * FROM product p WHERE p.category_id = :categoryId", nativeQuery = true)
- List<Product> getAllByCategory(@Param("categoryId") Long categoryId);
-
  @Transactional
  @Modifying
  @Query(value = "UPDATE product SET name = :#{#product.name}, register_date = :#{#product.registerDate}", nativeQuery = true)
- void update(@Param("product") Product product);
+ void updateProduct(@Param("product") Product product);
 
  @Transactional
  @Modifying

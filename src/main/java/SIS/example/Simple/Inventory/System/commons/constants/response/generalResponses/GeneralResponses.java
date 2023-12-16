@@ -1,6 +1,7 @@
 package SIS.example.Simple.Inventory.System.commons.constants.response.generalResponses;
 
 public interface GeneralResponses {
+    String CORRECT_RESPONSE = "Successful process";
     String BAD_REQUEST_RESPONSE = "The request was poorly made";
     String INTERNAL_SERVER_ERROR_RESPONSE = "There were a error in the system";
     String CONFLICT_RESPONSE = "There was a conflict in the mapping";

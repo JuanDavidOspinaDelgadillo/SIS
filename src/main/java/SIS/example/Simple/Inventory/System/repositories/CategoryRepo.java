@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CategoryRepo extends JpaRepository<Category, Long> {
@@ -23,7 +24,7 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
     List<Category> getCategories();
 
     @Query(value = "SELECT * FROM category WHERE category_id = :categoryId ", nativeQuery = true)
-    Category getCategoryById(@Param("categoryId") Long categoryId);
+    Optional<Category> getCategoryById(@Param("categoryId") Long categoryId);
 
     @Query(value = "SELECT * FROM product p WHERE p.category_id = :categoryId", nativeQuery = true)
     List<Product> getProductsByCategoryId(@Param("categoryId") Long categoryId);
@@ -31,7 +32,7 @@ public interface CategoryRepo extends JpaRepository<Category, Long> {
     @Transactional
     @Modifying
     @Query(value = "UPDATE category SET name = :#{#category.name} WHERE category_id = :#{#category.categoryId}", nativeQuery = true)
-    void updateCategoryByCategoryId(@Param("category") Category category);
+    void updateCategory(@Param("category") Category category);
 
     @Transactional
     @Modifying

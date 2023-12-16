@@ -1,6 +1,6 @@
 package SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities;
 
-import SIS.example.Simple.Inventory.System.commons.constants.exceptions.SimpleInventorySystemMappingException;
+import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISMappingException;
 import SIS.example.Simple.Inventory.System.commons.constants.response.generalResponses.GeneralResponses;
 import SIS.example.Simple.Inventory.System.commons.domains.DTO.CategoryDTO;
 import SIS.example.Simple.Inventory.System.commons.domains.entities.Category;
@@ -17,7 +17,7 @@ public class CategoryMapper {
             category = Mapper.modelMapper().map(categoryDTO, Category.class);
         } catch (Exception e) {
             log.error(e.getMessage());
-            throw new SimpleInventorySystemMappingException(GeneralResponses.CONFLICT_RESPONSE);
+            throw new SISMappingException();
         }
         return category;
     }
