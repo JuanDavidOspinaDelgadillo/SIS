@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface WorkerRepo extends JpaRepository<Worker, Long> {
@@ -17,10 +18,10 @@ public interface WorkerRepo extends JpaRepository<Worker, Long> {
     @Transactional
     @Modifying
     @Query(value = "INSERT INTO worker (name, age, email, password) VALUES (:#{#worker.name}, :#{#worker.age}, :#{#worker.email}, :#{#worker.password})", nativeQuery = true)
-    void createWorker(@Param("worker") Worker worker);
+    void registerWorker(@Param("worker") Worker worker);
 
     @Query(value = "SELECT * FROM worker w WHERE w.worker_id = :workerId", nativeQuery = true)
-    Worker getWorkerById(@Param("workerId") Long workerId);
+    Optional<Worker> getWorkerById(@Param("workerId") Long workerId);
 
     @Query(value = "SELECT * FROM worker", nativeQuery = true)
     List<Worker> getAll();

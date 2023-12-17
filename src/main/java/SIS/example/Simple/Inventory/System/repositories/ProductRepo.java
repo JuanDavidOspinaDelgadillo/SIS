@@ -9,16 +9,17 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepo extends JpaRepository<Product, Long> {
  @Transactional
  @Modifying
  @Query(value = "INSERT INTO product (register_date, name) VALUES (:#{#product.registerDate}, :#{#product.name})", nativeQuery = true)
- void createProduct(@Param("product") Product product);
+ void registerProduct(@Param("product") Product product);
 
  @Query(value = "SELECT * FROM product p WHERE p.product_id = :productId", nativeQuery = true)
- Product getProductByProductId(@Param("productId") Long productId);
+ Optional<Product> getProductByProductId(@Param("productId") Long productId);
 
  @Query(value = "SELECT * FROM product", nativeQuery = true)
  List<Product> getAll();

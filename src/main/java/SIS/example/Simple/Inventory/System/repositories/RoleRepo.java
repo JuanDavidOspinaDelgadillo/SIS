@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface RoleRepo extends JpaRepository<Role, Long> {
@@ -17,16 +18,16 @@ public interface RoleRepo extends JpaRepository<Role, Long> {
     @Transactional
     @Modifying
     @Query(value = "INSERT INTO role (name, wage) VALUES :#{#role.name}, :#{#role.wage}", nativeQuery = true)
-    void createRole(@Param("role") Role role);
+    void registerRole(@Param("role") Role role);
 
     @Query(value = "SELECT * FROM role r WHERE r.role_id = :roleId ", nativeQuery = true)
-    Role getRoleByRoleId(@Param("roleId") Long roleId);
+    Optional<Role> getRoleByRoleId(@Param("roleId") Long roleId);
 
     @Query(value = "SELECT * FROM role", nativeQuery = true)
     List<Role> getAll();
 
     @Query(value = "SELECT * FROM worker w WHERE w.role_id = :roleId", nativeQuery = true)
-    List<Worker> getAllByRoleId(@Param("roleId") Long roleId);
+    List<Worker> getAllWorkersByRoleId(@Param("roleId") Long roleId);
 
     @Transactional
     @Modifying
