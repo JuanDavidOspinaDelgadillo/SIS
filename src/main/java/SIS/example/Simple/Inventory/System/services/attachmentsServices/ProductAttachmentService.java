@@ -1,15 +1,14 @@
-package SIS.example.Simple.Inventory.System.services.attachments;
+package SIS.example.Simple.Inventory.System.services.attachmentsServices;
 
 import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISBadRequestException;
 import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISInternalServerErrorException;
 import SIS.example.Simple.Inventory.System.commons.constants.response.SerializedResponse;
 import SIS.example.Simple.Inventory.System.commons.constants.response.generalResponses.GeneralResponses;
-import SIS.example.Simple.Inventory.System.commons.domains.DTO.CategoryDTO;
-import SIS.example.Simple.Inventory.System.commons.domains.entities.Category;
+import SIS.example.Simple.Inventory.System.commons.domains.DTO.ProductDTO;
 import SIS.example.Simple.Inventory.System.commons.domains.entities.Product;
-import SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities.CategoryMapper;
-import SIS.example.Simple.Inventory.System.repositories.CategoryRepo;
-import SIS.example.Simple.Inventory.System.services.ICategoryService;
+import SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities.ProductMapper;
+import SIS.example.Simple.Inventory.System.repositories.ProductRepo;
+import SIS.example.Simple.Inventory.System.services.IProductService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,29 +19,29 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-@Service
 @Component
 @Log4j2
-public class CategoryAttachment implements ICategoryService {
-    private final CategoryRepo categoryRepo;
-    private final CategoryMapper categoryMapper;
+@Service
+public class ProductAttachmentService implements IProductService {
+
+    private final ProductMapper productMapper;
+    private final ProductRepo productRepo;
 
     @Autowired
-    public CategoryAttachment(CategoryRepo categoryRepo, CategoryMapper categoryMapper){
-        this.categoryRepo = categoryRepo;
-        this.categoryMapper = categoryMapper;
+    public ProductAttachmentService(ProductMapper productMapper, ProductRepo productRepo){
+        this.productMapper = productMapper;
+        this.productRepo = productRepo;
     }
-
     @Override
-    public ResponseEntity<SerializedResponse> registerCategory(CategoryDTO categoryDTO) {
+    public ResponseEntity<SerializedResponse> registerProduct(ProductDTO productDTO) {
         try {
-            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryDTO.getId());
-            if (categoryExist.isPresent()){
-                Category category = this.categoryMapper.mapCategoryDTOToCategoryEntity(categoryDTO);
-                this.categoryRepo.createCategory(category);
+            Optional<Product> productExist = this.productRepo.getProductByProductId(productDTO.getId());
+            if(productExist.isPresent()) {
+                Product product = this.productMapper.mapProductDTOToProductEntity(productDTO);
+                this.productRepo.registerProduct(product);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .object(GeneralResponses.CORRECT_RESPONSE)
                         .httpStatus(HttpStatus.OK)
+                        .object(GeneralResponses.CORRECT_RESPONSE)
                         .build());
             } else {
                 throw new SISBadRequestException();
@@ -54,14 +53,14 @@ public class CategoryAttachment implements ICategoryService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> readCategoryById(Long categoryId) {
+    public ResponseEntity<SerializedResponse> readProductById(Long productId) {
         try {
-            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryId);
-            if (categoryExist.isPresent()) {
-                Category category = categoryExist.get();
+            Optional<Product> productExist = this.productRepo.getProductByProductId(productId);
+            if(productExist.isPresent()) {
+                Product product = productExist.get();
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
-                        .object(category)
+                        .object(product)
                         .build());
             } else {
                 throw new SISBadRequestException();
@@ -75,26 +74,8 @@ public class CategoryAttachment implements ICategoryService {
     @Override
     public ResponseEntity<SerializedResponse> readAll() {
         try {
-            List<Category> categoryList = this.categoryRepo.getCategories();
-            if (!categoryList.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .httpStatus(HttpStatus.OK)
-                        .object(categoryList)
-                        .build());
-            } else {
-                throw new SISBadRequestException();
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new SISInternalServerErrorException();
-        }
-    }
-
-    @Override
-    public ResponseEntity<SerializedResponse> getProductsByCategory(Long categoryId) {
-        try {
-            List<Product> productList = this.categoryRepo.getProductsByCategoryId(categoryId);
-            if (!productList.isEmpty()) {
+            List<Product> productList = this.productRepo.getAll();
+            if(!productList.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(productList)
@@ -109,12 +90,12 @@ public class CategoryAttachment implements ICategoryService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> updatedCategory(CategoryDTO categoryDTO) {
+    public ResponseEntity<SerializedResponse> updateProduct(ProductDTO productDTO) {
         try {
-            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryDTO.getId());
-            if (categoryExist.isPresent()) {
-                Category category = this.categoryMapper.mapCategoryDTOToCategoryEntity(categoryDTO);
-                this.categoryRepo.updateCategory(category);
+            Optional<Product> productExist = this.productRepo.getProductByProductId(productDTO.getId());
+            if (productExist.isPresent()) {
+                Product product = this.productMapper.mapProductDTOToProductEntity(productDTO);
+                this.productRepo.updateProduct(product);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
@@ -129,18 +110,17 @@ public class CategoryAttachment implements ICategoryService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> deleteCategory(Long categoryId) {
+    public ResponseEntity<SerializedResponse> deleteProduct(Long productId) {
         try {
-            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryId);
-            if (categoryExist.isPresent()) {
-                this.categoryRepo.deleteByCategoryId(categoryId);
+            Optional<Product> productExist = this.productRepo.getProductByProductId(productId);
+            if (productExist.isPresent()) {
+                this.productRepo.deleteByProductId(productId);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
                         .build());
             } else {
                 throw new SISBadRequestException();
-
             }
         } catch (Exception e) {
             log.error(e.getMessage());

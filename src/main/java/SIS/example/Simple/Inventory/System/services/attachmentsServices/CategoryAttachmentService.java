@@ -1,16 +1,15 @@
-package SIS.example.Simple.Inventory.System.services.attachments;
+package SIS.example.Simple.Inventory.System.services.attachmentsServices;
 
-import SIS.example.Simple.Inventory.System.commons.constants.encryption.EncryptionService;
 import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISBadRequestException;
 import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISInternalServerErrorException;
 import SIS.example.Simple.Inventory.System.commons.constants.response.SerializedResponse;
 import SIS.example.Simple.Inventory.System.commons.constants.response.generalResponses.GeneralResponses;
-import SIS.example.Simple.Inventory.System.commons.domains.DTO.WorkerDTO;
+import SIS.example.Simple.Inventory.System.commons.domains.DTO.CategoryDTO;
+import SIS.example.Simple.Inventory.System.commons.domains.entities.Category;
 import SIS.example.Simple.Inventory.System.commons.domains.entities.Product;
-import SIS.example.Simple.Inventory.System.commons.domains.entities.Worker;
-import SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities.WorkerMapper;
-import SIS.example.Simple.Inventory.System.repositories.WorkerRepo;
-import SIS.example.Simple.Inventory.System.services.IWorkerService;
+import SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities.CategoryMapper;
+import SIS.example.Simple.Inventory.System.repositories.CategoryRepo;
+import SIS.example.Simple.Inventory.System.services.ICategoryService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,34 +17,104 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Log4j2
-@Component
 @Service
-public class WorkerAttachment implements IWorkerService {
-
-    private final WorkerRepo workerRepo;
-    private final WorkerMapper workerMapper;
-    private final EncryptionService encryptionService;
+@Component
+@Log4j2
+public class CategoryAttachmentService implements ICategoryService {
+    private final CategoryRepo categoryRepo;
+    private final CategoryMapper categoryMapper;
 
     @Autowired
-    public WorkerAttachment(WorkerRepo workerRepo, WorkerMapper workerMapper, EncryptionService encryptionService) {
-        this.workerMapper = workerMapper;
-        this.workerRepo = workerRepo;
-        this.encryptionService = encryptionService;
+    public CategoryAttachmentService(CategoryRepo categoryRepo, CategoryMapper categoryMapper){
+        this.categoryRepo = categoryRepo;
+        this.categoryMapper = categoryMapper;
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> registerWorker(WorkerDTO workerDTO) {
+    public ResponseEntity<SerializedResponse> registerCategory(CategoryDTO categoryDTO) {
         try {
-            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerDTO.getId());
-            if (workerExist.isPresent()) {
-                Worker worker = this.workerMapper.mapWorkerDTOToWorkerEntity(workerDTO);
-                worker.setPassword(this.encryptionService.encrypt(worker.getPassword()));
-                this.workerRepo.registerWorker(worker);
+            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryDTO.getId());
+            if (categoryExist.isPresent()){
+                Category category = this.categoryMapper.mapCategoryDTOToCategoryEntity(categoryDTO);
+                this.categoryRepo.createCategory(category);
+                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
+                        .object(GeneralResponses.CORRECT_RESPONSE)
+                        .httpStatus(HttpStatus.OK)
+                        .build());
+            } else {
+                throw new SISBadRequestException();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SISInternalServerErrorException();
+        }
+    }
+
+    @Override
+    public ResponseEntity<SerializedResponse> readCategoryById(Long categoryId) {
+        try {
+            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryId);
+            if (categoryExist.isPresent()) {
+                Category category = categoryExist.get();
+                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
+                        .httpStatus(HttpStatus.OK)
+                        .object(category)
+                        .build());
+            } else {
+                throw new SISBadRequestException();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SISInternalServerErrorException();
+        }
+    }
+
+    @Override
+    public ResponseEntity<SerializedResponse> readAll() {
+        try {
+            List<Category> categoryList = this.categoryRepo.getCategories();
+            if (!categoryList.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
+                        .httpStatus(HttpStatus.OK)
+                        .object(categoryList)
+                        .build());
+            } else {
+                throw new SISBadRequestException();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SISInternalServerErrorException();
+        }
+    }
+
+    @Override
+    public ResponseEntity<SerializedResponse> getProductsByCategory(Long categoryId) {
+        try {
+            List<Product> productList = this.categoryRepo.getProductsByCategoryId(categoryId);
+            if (!productList.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
+                        .httpStatus(HttpStatus.OK)
+                        .object(productList)
+                        .build());
+            } else {
+                throw new SISBadRequestException();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SISInternalServerErrorException();
+        }
+    }
+
+    @Override
+    public ResponseEntity<SerializedResponse> updatedCategory(CategoryDTO categoryDTO) {
+        try {
+            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryDTO.getId());
+            if (categoryExist.isPresent()) {
+                Category category = this.categoryMapper.mapCategoryDTOToCategoryEntity(categoryDTO);
+                this.categoryRepo.updateCategory(category);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
@@ -60,98 +129,18 @@ public class WorkerAttachment implements IWorkerService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> readWorker(Long workerId) {
+    public ResponseEntity<SerializedResponse> deleteCategory(Long categoryId) {
         try {
-            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerId);
-            if (workerExist.isPresent()) {
-                Worker worker = workerExist.get();
-                worker.setPassword(this.encryptionService.decrypt(worker.getPassword()));
-                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .httpStatus(HttpStatus.OK)
-                        .object(worker)
-                        .build());
-            } else {
-                throw new SISBadRequestException();
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new SISInternalServerErrorException();
-        }
-    }
-
-    @Override
-    public ResponseEntity<SerializedResponse> readAllWorkers() {
-        try {
-            List<Worker> workerList = this.workerRepo.getAll();
-            if (!workerList.isEmpty()) {
-                List<Worker> workersWithUnencryptedPasswordsList = new ArrayList<>();
-                for (Worker worker : workerList) {
-                    worker.setPassword(this.encryptionService.decrypt(worker.getPassword()));
-                    workersWithUnencryptedPasswordsList.add(worker);
-                }
-                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .httpStatus(HttpStatus.OK)
-                        .object(workersWithUnencryptedPasswordsList)
-                        .build());
-            } else {
-                throw new SISBadRequestException();
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new SISInternalServerErrorException();
-        }
-    }
-
-    @Override
-    public ResponseEntity<SerializedResponse> getAllProductsRegisteredByWorker(Long workerId) {
-        try {
-            List<Product> productsList = this.workerRepo.getAllProductsRegisteredByWorkerId(workerId);
-            if (!productsList.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .httpStatus(HttpStatus.OK)
-                        .object(productsList)
-                        .build());
-            } else {
-                throw new SISBadRequestException();
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new SISInternalServerErrorException();
-        }
-    }
-
-    @Override
-    public ResponseEntity<SerializedResponse> updateWorker(WorkerDTO workerDTO) {
-        try {
-            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerDTO.getId());
-            if (workerExist.isPresent()) {
-                Worker worker = this.workerMapper.mapWorkerDTOToWorkerEntity(workerDTO);
-                this.workerRepo.updateWorker(worker);
+            Optional<Category> categoryExist = this.categoryRepo.getCategoryById(categoryId);
+            if (categoryExist.isPresent()) {
+                this.categoryRepo.deleteByCategoryId(categoryId);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
                         .build());
             } else {
                 throw new SISBadRequestException();
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new SISInternalServerErrorException();
-        }
-    }
 
-    @Override
-    public ResponseEntity<SerializedResponse> deleteWorker(Long workerId) {
-        try {
-            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerId);
-            if (workerExist.isPresent()) {
-                this.workerRepo.deleteWorkerById(workerId);
-                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .httpStatus(HttpStatus.OK)
-                        .object(GeneralResponses.CORRECT_RESPONSE)
-                        .build());
-            } else {
-                throw new SISBadRequestException();
             }
         } catch (Exception e) {
             log.error(e.getMessage());

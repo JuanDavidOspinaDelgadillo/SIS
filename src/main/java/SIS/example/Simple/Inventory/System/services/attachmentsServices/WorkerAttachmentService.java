@@ -1,15 +1,16 @@
-package SIS.example.Simple.Inventory.System.services.attachments;
+package SIS.example.Simple.Inventory.System.services.attachmentsServices;
 
+import SIS.example.Simple.Inventory.System.commons.constants.encryption.EncryptionService;
 import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISBadRequestException;
 import SIS.example.Simple.Inventory.System.commons.constants.exceptions.advices.SISInternalServerErrorException;
 import SIS.example.Simple.Inventory.System.commons.constants.response.SerializedResponse;
 import SIS.example.Simple.Inventory.System.commons.constants.response.generalResponses.GeneralResponses;
-import SIS.example.Simple.Inventory.System.commons.domains.DTO.RoleDTO;
-import SIS.example.Simple.Inventory.System.commons.domains.entities.Role;
+import SIS.example.Simple.Inventory.System.commons.domains.DTO.WorkerDTO;
+import SIS.example.Simple.Inventory.System.commons.domains.entities.Product;
 import SIS.example.Simple.Inventory.System.commons.domains.entities.Worker;
-import SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities.RoleMapper;
-import SIS.example.Simple.Inventory.System.repositories.RoleRepo;
-import SIS.example.Simple.Inventory.System.services.IRoleService;
+import SIS.example.Simple.Inventory.System.commons.mapper.mappedEntities.WorkerMapper;
+import SIS.example.Simple.Inventory.System.repositories.WorkerRepo;
+import SIS.example.Simple.Inventory.System.services.IWorkerService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,29 +18,34 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Log4j2
 @Component
 @Service
-public class RoleAttachment implements IRoleService {
+public class WorkerAttachmentService implements IWorkerService {
 
-    private final RoleRepo roleRepo;
-    private final RoleMapper roleMapper;
+    private final WorkerRepo workerRepo;
+    private final WorkerMapper workerMapper;
+    private final EncryptionService encryptionService;
 
     @Autowired
-    public RoleAttachment(RoleMapper roleMapper, RoleRepo roleRepo) {
-        this.roleMapper = roleMapper;
-        this.roleRepo = roleRepo;
+    public WorkerAttachmentService(WorkerRepo workerRepo, WorkerMapper workerMapper, EncryptionService encryptionService) {
+        this.workerMapper = workerMapper;
+        this.workerRepo = workerRepo;
+        this.encryptionService = encryptionService;
     }
+
     @Override
-    public ResponseEntity<SerializedResponse> registerRole(RoleDTO roleDTO) {
+    public ResponseEntity<SerializedResponse> registerWorker(WorkerDTO workerDTO) {
         try {
-            Optional<Role> roleExist = this.roleRepo.getRoleByRoleId(roleDTO.getId());
-            if (roleExist.isPresent()) {
-                Role role = this.roleMapper.mapRoleDTOToRoleEntity(roleDTO);
-                this.roleRepo.registerRole(role);
+            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerDTO.getId());
+            if (workerExist.isPresent()) {
+                Worker worker = this.workerMapper.mapWorkerDTOToWorkerEntity(workerDTO);
+                worker.setPassword(this.encryptionService.encrypt(worker.getPassword()));
+                this.workerRepo.registerWorker(worker);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
@@ -54,14 +60,15 @@ public class RoleAttachment implements IRoleService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> readRoleById(Long roleId) {
+    public ResponseEntity<SerializedResponse> readWorker(Long workerId) {
         try {
-            Optional<Role> roleExist = this.roleRepo.getRoleByRoleId(roleId);
-            if (roleExist.isPresent()) {
-                Role role = roleExist.get();
+            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerId);
+            if (workerExist.isPresent()) {
+                Worker worker = workerExist.get();
+                worker.setPassword(this.encryptionService.decrypt(worker.getPassword()));
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
-                        .object(role)
+                        .object(worker)
                         .build());
             } else {
                 throw new SISBadRequestException();
@@ -73,31 +80,18 @@ public class RoleAttachment implements IRoleService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> readAll() {
+    public ResponseEntity<SerializedResponse> readAllWorkers() {
         try {
-            List<Role> roleList = this.roleRepo.getAll();
-            if (!roleList.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
-                        .httpStatus(HttpStatus.OK)
-                        .object(roleList)
-                        .build());
-            } else {
-                throw new SISBadRequestException();
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new SISInternalServerErrorException();
-        }
-    }
-
-    @Override
-    public ResponseEntity<SerializedResponse> getAllWorkersByRole(Long roleId) {
-        try {
-            List<Worker> workerList = this.roleRepo.getAllWorkersByRoleId(roleId);
+            List<Worker> workerList = this.workerRepo.getAll();
             if (!workerList.isEmpty()) {
+                List<Worker> workersWithUnencryptedPasswordsList = new ArrayList<>();
+                for (Worker worker : workerList) {
+                    worker.setPassword(this.encryptionService.decrypt(worker.getPassword()));
+                    workersWithUnencryptedPasswordsList.add(worker);
+                }
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
-                        .object(workerList)
+                        .object(workersWithUnencryptedPasswordsList)
                         .build());
             } else {
                 throw new SISBadRequestException();
@@ -109,12 +103,30 @@ public class RoleAttachment implements IRoleService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> updateRole(RoleDTO roleDTO) {
+    public ResponseEntity<SerializedResponse> getAllProductsRegisteredByWorker(Long workerId) {
         try {
-            Optional<Role> roleExist = this.roleRepo.getRoleByRoleId(roleDTO.getId());
-            if (roleExist.isPresent()) {
-                Role role = this.roleMapper.mapRoleDTOToRoleEntity(roleDTO);
-                this.roleRepo.updateRole(role);
+            List<Product> productsList = this.workerRepo.getAllProductsRegisteredByWorkerId(workerId);
+            if (!productsList.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
+                        .httpStatus(HttpStatus.OK)
+                        .object(productsList)
+                        .build());
+            } else {
+                throw new SISBadRequestException();
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new SISInternalServerErrorException();
+        }
+    }
+
+    @Override
+    public ResponseEntity<SerializedResponse> updateWorker(WorkerDTO workerDTO) {
+        try {
+            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerDTO.getId());
+            if (workerExist.isPresent()) {
+                Worker worker = this.workerMapper.mapWorkerDTOToWorkerEntity(workerDTO);
+                this.workerRepo.updateWorker(worker);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
@@ -129,11 +141,11 @@ public class RoleAttachment implements IRoleService {
     }
 
     @Override
-    public ResponseEntity<SerializedResponse> deleteRole(Long roleId) {
+    public ResponseEntity<SerializedResponse> deleteWorker(Long workerId) {
         try {
-            Optional<Role> roleExist = this.roleRepo.getRoleByRoleId(roleId);
-            if (roleExist.isPresent()) {
-                this.roleRepo.deleteByRoleId(roleId);
+            Optional<Worker> workerExist = this.workerRepo.getWorkerById(workerId);
+            if (workerExist.isPresent()) {
+                this.workerRepo.deleteWorkerById(workerId);
                 return ResponseEntity.status(HttpStatus.OK).body(SerializedResponse.builder()
                         .httpStatus(HttpStatus.OK)
                         .object(GeneralResponses.CORRECT_RESPONSE)
